@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acquah Travel · Flights across East and West Africa</title>
+  <meta name="description" content="Search, compare and book flights between Kigali, Accra, Lagos, Nairobi, Addis Ababa and more.">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a href="#" class="brand" data-nav="home">Acquah<span>Travel</span></a>
+    <nav>
+      <a href="#" data-nav="home">Book a flight</a>
+      <a href="#" data-nav="trips">My trips</a>
+    </nav>
+  </header>
+  <p class="notice">Demo booking site using Duffel test mode. No real tickets are issued.</p>
+
+  <main>
+    <section id="home" data-view="home">
+      <div class="hero">
+        <h1>Flights across East and West Africa</h1>
+        <p>Compare fares between Kigali, Accra, Lagos, Nairobi, Addis Ababa, Johannesburg and dozens more cities, then book in a few steps.</p>
+      </div>
+
+      <form id="search-form" class="panel search" novalidate>
+        <fieldset class="trip-type">
+          <legend class="sr-only">Trip type</legend>
+          <label><input type="radio" name="trip" value="return" checked> Return</label>
+          <label><input type="radio" name="trip" value="oneway"> One way</label>
+        </fieldset>
+        <div class="search-grid">
+          <div class="field ac"><label for="from">From</label><input id="from" autocomplete="off" placeholder="City or airport" required><ul class="ac-list" hidden></ul></div>
+          <button type="button" id="swap" class="swap" title="Swap departure and arrival" aria-label="Swap departure and arrival">⇄</button>
+          <div class="field ac"><label for="to">To</label><input id="to" autocomplete="off" placeholder="City or airport" required><ul class="ac-list" hidden></ul></div>
+          <label class="field">Depart<input type="date" id="depart" required></label>
+          <label class="field">Return<input type="date" id="return"></label>
+          <label class="field">Passengers<select id="adults"></select></label>
+          <label class="field">Cabin<select id="cabin">
+            <option value="economy">Economy</option>
+            <option value="premium_economy">Premium economy</option>
+            <option value="business">Business</option>
+            <option value="first">First</option>
+          </select></label>
+          <button class="btn btn-primary">Search flights</button>
+        </div>
+        <p id="search-error" class="form-error" role="alert"></p>
+        <div class="popular">
+          <span>Popular routes:</span>
+          <button type="button" data-route="KGL NBO">Kigali → Nairobi</button>
+          <button type="button" data-route="ACC LOS">Accra → Lagos</button>
+          <button type="button" data-route="ADD NBO">Addis Ababa → Nairobi</button>
+          <button type="button" data-route="DAR JNB">Dar es Salaam → Johannesburg</button>
+          <button type="button" data-route="EBB KGL">Entebbe → Kigali</button>
+        </div>
+      </form>
+
+      <div id="results" class="results" hidden>
+        <aside class="filters panel">
+          <h2>Filter</h2>
+          <label class="field">Stops<select id="f-stops">
+            <option value="9">Any number</option><option value="0">Direct only</option><option value="1">Up to 1 stop</option>
+          </select></label>
+          <fieldset><legend>Departure time</legend>
+            <label><input type="checkbox" name="f-time" value="night" checked> Night (00–05)</label>
+            <label><input type="checkbox" name="f-time" value="morning" checked> Morning (05–12)</label>
+            <label><input type="checkbox" name="f-time" value="afternoon" checked> Afternoon (12–18)</label>
+            <label><input type="checkbox" name="f-time" value="evening" checked> Evening (18–24)</label>
+          </fieldset>
+          <label class="field">Max price <output id="f-price-out"></output><input type="range" id="f-price"></label>
+          <fieldset id="f-airlines"><legend>Airlines</legend></fieldset>
+        </aside>
+        <div>
+          <div class="results-bar">
+            <p id="result-meta" aria-live="polite"></p>
+            <label>Sort by <select id="sort">
+              <option value="cheapest">Cheapest</option><option value="fastest">Fastest</option><option value="earliest">Earliest departure</option>
+            </select></label>
+          </div>
+          <div id="result-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="booking" data-view="booking" hidden>
+      <button type="button" class="link" data-nav="home">← Back to results</button>
+      <h1>Your booking</h1>
+      <div id="fare-check"></div>
+      <form id="passenger-form" hidden>
+        <div id="passenger-list"></div>
+        <button class="btn btn-primary">Review booking</button>
+      </form>
+      <div id="review" class="panel" hidden></div>
+    </section>
+
+    <section id="confirmation" data-view="confirmation" hidden>
+      <h1>Booking confirmed</h1>
+      <p>Your test order has been created with Duffel. Keep the reference below to look it up later.</p>
+      <div id="confirmation-detail"></div>
+    </section>
+
+    <section id="trips" data-view="trips" hidden>
+      <h1>My trips</h1>
+      <form id="lookup-form" class="panel lookup">
+        <label class="field">Booking reference or order ID<input id="lookup-ref" required placeholder="e.g. RZPNX8"></label>
+        <button class="btn btn-primary">Find booking</button>
+      </form>
+      <div id="lookup-result"></div>
+      <h2>Booked on this device</h2>
+      <div id="saved-trips"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Served by <span id="served-by">…</span></p>
+    <p>Flight data by <a href="https://duffel.com" rel="noopener" target="_blank">Duffel</a></p>
+  </footer>
+
+  <template id="tpl-passenger">
+    <fieldset class="panel passenger">
+      <legend></legend>
+      <div class="pax-grid">
+        <label class="field">Title<select name="title" required>
+          <option value="">Choose</option><option value="mr">Mr</option><option value="ms">Ms</option>
+          <option value="mrs">Mrs</option><option value="miss">Miss</option><option value="dr">Dr</option>
+        </select></label>
+        <label class="field">Given names<input name="given_name" required maxlength="40" pattern="\p{L}[\p{L} '’\-]*" autocomplete="given-name"></label>
+        <label class="field">Family name<input name="family_name" required maxlength="40" pattern="\p{L}[\p{L} '’\-]*" autocomplete="family-name"></label>
+        <label class="field">Gender (as on passport)<select name="gender" required>
+          <option value="">Choose</option><option value="f">Female</option><option value="m">Male</option>
+        </select></label>
+        <label class="field">Date of birth<input type="date" name="born_on" required></label>
+        <label class="field">Email<input type="email" name="email" required autocomplete="email"></label>
+        <label class="field">Phone with country code<input type="tel" name="phone_number" required placeholder="+250 788 123 456" pattern="\+[0-9 \(\)\-]{7,20}" autocomplete="tel"></label>
+      </div>
+    </fieldset>
+  </template>
+</body>
+</html>
