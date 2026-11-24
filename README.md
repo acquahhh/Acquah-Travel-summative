@@ -61,38 +61,127 @@ client → Lb01 (HAProxy, roundrobin, GET /health)
              └──────────── Web02: Nginx :80 → Node :3000 (systemd)
 ```
 
-### Web01 and Web02 (Ubuntu)
+### 1. Install the app on Web01 and Web02 (Ubuntu)
 
 ```bash
 sudo apt update && sudo apt install -y nginx nodejs npm   # Node 20+ (NodeSource if the distro's is older)
-sudo mkdir -p /var/www && sudo chown $USER /var/www
-git clone <your-repo-url> /var/www/acquah-travel
-cd /var/www/acquah-travel && npm ci --omit=dev
+sudo git clone <your-repo-url> /opt/acquah-travel
+sudo chown -R ubuntu:ubuntu /opt/acquah-travel
+cd /opt/acquah-travel && npm ci --omit=dev
 cp .env.example .env && nano .env                          # add DUFFEL_TOKEN
+```
 
-sudo cp deploy/nyota.service /etc/systemd/system/nyota.service
-sudo systemctl daemon-reload && sudo systemctl enable --now nyota
-sudo systemctl status nyota
+### 2. systemd service on Web01 and Web02
 
-sudo cp deploy/nginx.conf /etc/nginx/sites-available/acquah-travel
+Save this as `/etc/systemd/system/acquah-travel.service` (`sudo nano /etc/systemd/system/acquah-travel.service`). Change `User=` if your server account is not `ubuntu`.
+
+```ini
+[Unit]
+Description=Acquah Travel flight booking site (Node.js)
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/acquah-travel
+EnvironmentFile=/opt/acquah-travel/.env
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+Environment=NODE_ENV=production
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then enable and start it:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now acquah-travel
+sudo systemctl status acquah-travel
+curl -s http://localhost:3000/health
+```
+
+### 3. Nginx on Web01 and Web02
+
+Save this as `/etc/nginx/sites-available/acquah-travel`:
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name _;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 30s;
+    }
+}
+```
+
+Then enable the site and reload Nginx:
+
+```bash
 sudo ln -sf /etc/nginx/sites-available/acquah-travel /etc/nginx/sites-enabled/acquah-travel
 sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-Change `User=` in `nyota.service` if your server account is not `ubuntu`.
-
-### Lb01 (HAProxy)
+### 4. HAProxy on Lb01
 
 ```bash
 sudo apt install -y haproxy
-sudo cp deploy/haproxy.cfg /etc/haproxy/haproxy.cfg   # replace WEB01_IP / WEB02_IP
+sudo nano /etc/haproxy/haproxy.cfg
+```
+
+Replace the file with the following, and swap `WEB01_IP` and `WEB02_IP` for your servers' addresses:
+
+```haproxy
+global
+    log /dev/log local0
+    maxconn 2048
+    user haproxy
+    group haproxy
+    daemon
+
+defaults
+    log     global
+    mode    http
+    option  httplog
+    option  forwardfor
+    timeout connect 5s
+    timeout client  30s
+    timeout server  30s
+
+frontend acquah_front
+    bind *:80
+    default_backend acquah_web
+
+backend acquah_web
+    balance roundrobin
+    option httpchk GET /health
+    http-check expect status 200
+    server web01 WEB01_IP:80 check
+    server web02 WEB02_IP:80 check
+```
+
+Then check the config and restart HAProxy:
+
+```bash
 sudo haproxy -c -f /etc/haproxy/haproxy.cfg && sudo systemctl restart haproxy
 ```
 
 HAProxy sends requests to Web01 and Web02 in turn (`balance roundrobin`). It calls `GET /health` on each server and stops sending traffic to a server that fails the check.
 
-### Testing the load balancer
+### 5. Testing the load balancer
 
 Each response carries an `X-Served-By` header with the hostname of the server that handled it. Run this a few times against Lb01 and the value should alternate:
 
@@ -106,7 +195,7 @@ curl http://LB01_IP/health
 # {"status":"ok","server":"web-02"}
 ```
 
-The site footer also shows "Served by <hostname>". If you stop the app on one server (`sudo systemctl stop nyota`), HAProxy marks it down and all requests go to the other.
+The site footer also shows "Served by <hostname>". If you stop the app on one server (`sudo systemctl stop acquah-travel`), HAProxy marks it down and all requests go to the other.
 
 Because traffic goes through HAProxy and then Nginx, the app trusts two proxy hops (`trust proxy = 2`). This lets rate limiting see the real client IP.
 
