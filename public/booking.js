@@ -1,4 +1,4 @@
-import { $, el, api, status, show, money, day, time, isoDate, orderCard } from './ui.js';
+import { $, el, api, status, show, money, day, time, isoDate, plural } from './app.js';
 
 const form = $('#passenger-form');
 const review = $('#review');
@@ -8,6 +8,19 @@ let passengers;
 
 const saved = () => JSON.parse(localStorage.getItem(STORE) || '[]');
 const route = (o) => o.slices.map((s) => `${s.from} → ${s.to}`).join(', ');
+
+function orderCard(o) {
+  const rows = [
+    ['Route', o.slices.map((s) => `${s.from} → ${s.to}, ${day(s.depart)} at ${time(s.depart)}`).join('; ')],
+    ['Airline', o.airline],
+    ['Passengers', o.passengers.join(', ')],
+    ['Total paid', money(o.total, o.currency)],
+    ['Order ID', o.id],
+  ];
+  return el('article', { className: 'panel order' },
+    el('p', { className: 'order-ref' }, 'Booking reference ', el('strong', { textContent: o.reference })),
+    el('dl', {}, ...rows.flatMap(([k, v]) => [el('dt', { textContent: k }), el('dd', { textContent: v })])));
+}
 
 export async function startBooking(selected) {
   show('booking');
@@ -25,7 +38,7 @@ export async function startBooking(selected) {
     el('p', { className: 'price', textContent: money(offer.total, offer.currency) }),
     el('p', { className: 'muted', textContent: changed
       ? `The price changed from ${money(selected.total, selected.currency)} since your search.`
-      : `Price confirmed for ${offer.passengers.length} passenger${offer.passengers.length > 1 ? 's' : ''}. Hold expires at ${new Date(offer.expires_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.` })));
+      : `Price confirmed for ${plural(offer.passengers.length, 'passenger')}. Hold expires at ${new Date(offer.expires_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.` })));
   const tpl = $('#tpl-passenger').content.firstElementChild;
   $('#passenger-list').replaceChildren(...offer.passengers.map((p, i) => {
     const fs = tpl.cloneNode(true);
