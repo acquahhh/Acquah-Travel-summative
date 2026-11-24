@@ -1,5 +1,7 @@
 # Acquah Travel
 
+[![CI](https://github.com/acquahhh/Acquah-Travel-summative/actions/workflows/ci.yml/badge.svg)](https://github.com/acquahhh/Acquah-Travel-summative/actions/workflows/ci.yml)
+
 Search, compare and book flights across Africa (Duffel test mode).
 
 Acquah Travel is a flight booking site for people travelling within East and West Africa: Kigali, Accra, Lagos, Nairobi, Addis Ababa, Johannesburg, Dar es Salaam, Entebbe and more. Booking regional flights often means checking several airline sites one by one. This project puts search, comparison and booking for these routes in one simple page.
@@ -37,6 +39,16 @@ npm run dev               # restarts on file changes; use `npm start` in product
 ```
 
 Open http://localhost:3000. The console prints `Server running at http://localhost:3000`.
+
+## Testing
+
+```bash
+npm test
+```
+
+This runs the unit tests in `validate.test.js` with Node's built-in test runner (`node --test`). They cover the server-side validation of flight searches and passenger details, and need no Duffel token or network access.
+
+The [CI workflow](.github/workflows/ci.yml) runs the same tests with GitHub Actions on every push and pull request to `main`: it checks out the code, sets up Node 20 with npm caching, then runs `npm ci` and `npm test`. The badge at the top of this README shows the latest result.
 
 ## API
 
