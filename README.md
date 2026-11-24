@@ -306,4 +306,5 @@ Acquah Travel is a fictional travel agency. It is not affiliated with any airlin
 
 ## AI assistance
 
-To be written by the author.
+Used claude to help me generate the readme file and also helped me in integrating the them on the servers
+
