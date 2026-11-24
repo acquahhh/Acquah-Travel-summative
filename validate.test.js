@@ -89,3 +89,4 @@ test('passengers: rejects bad passenger lists and ids', () => {
   rejects(() => book({ ...traveller, id: 'abc' }), /does not look right/);
   rejects(() => v.booking({ offer_id: 'ord_0000XyZ987', passengers: [traveller] }), /does not look right/);
 });
+
