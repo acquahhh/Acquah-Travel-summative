@@ -302,7 +302,7 @@ Acquah Travel is a fictional travel agency. It is not affiliated with any airlin
 
 **Limited sandbox results for African routes.** Duffel's test mode returns offers from its sandbox airline, and some African routes and dates return few or no flights. The site handles this with a clear empty state ("No flights found, try other dates or a nearby airport.") instead of an error. The popular-route buttons give a quick way to try other routes.
 
-**Keeping files small while reducing their number.** The project rules ask for few files and short files at the same time. I merged the frontend helpers and results code into `public/app.js` and the deploy configs into this README. Duplicated helpers were removed so every file stays under its line limit. Validation was kept in its own `validate.js` so it can be unit-tested without starting the server.
+
 
 ## AI assistance
 
