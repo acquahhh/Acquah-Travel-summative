@@ -1,4 +1,9 @@
-const { ApiError } = require('./validate');
+class ApiError extends Error {
+  constructor(status, error, message) {
+    super(message);
+    Object.assign(this, { status, error });
+  }
+}
 
 const fail = (status, error, message) => new ApiError(status, error, message);
 const expired = () => fail(410, 'offer_expired', 'This fare is no longer available. Please search again for current prices.');
@@ -96,4 +101,4 @@ async function order(ref) {
   return simplifyOrder(found);
 }
 
-module.exports = { airports, search, offer, book, order };
+module.exports = { ApiError, airports, search, offer, book, order };
