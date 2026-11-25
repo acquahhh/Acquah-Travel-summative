@@ -5,7 +5,7 @@
 Search, compare and book flights across Africa (Duffel test mode).
 
 - **Live site (load balancer):** http://18.130.219.94
-- **Demo video:** Link coming soon
+- **Demo video:** https://youtu.be/roSd0voJk0s
 - **Repository:** https://github.com/acquahhh/Acquah-Travel-summative
 
 > **For graders:** no login is needed. Open the live site and search a route such as Kigali → Nairobi. The Duffel test token is provided in the submission comments. It is never stored in this repository.
